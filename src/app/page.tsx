@@ -31,7 +31,9 @@ export default function Home() {
       : [...bookmarkedFonts, fontName];
     
     setBookmarkedFonts(updatedBookmarks);
-    localStorage.setItem('bookmarkedFonts', JSON.stringify(updatedBookmarks));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bookmarkedFonts', JSON.stringify(updatedBookmarks));
+    }
   };
 
   const isBookmarked = (fontName: string) => bookmarkedFonts.includes(fontName);
@@ -42,7 +44,14 @@ export default function Home() {
         <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/PrintStudioLogo.png" alt="Print Studio Logo" width={150} height={40} className="dark:invert"/>
+              <Image 
+                src="https://placehold.co/150x40.png" 
+                alt="Print Studio Logo" 
+                width={150} 
+                height={40} 
+                className="dark:invert"
+                data-ai-hint="logo"
+              />
             </Link>
           </div>
           <div className="flex items-center gap-4">
@@ -106,18 +115,18 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
           {fontList.map(([fontName, _]) => (
             <Card key={fontName} className="relative overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col group">
+              <CardHeader className="p-4 border-b">
+                <CardTitle className="text-xl font-semibold text-foreground truncate text-center">{fontName}</CardTitle>
+              </CardHeader>
               <CardContent className="p-6 flex-grow flex items-center justify-center min-h-[150px]">
                 <p 
-                  className="text-4xl text-center break-words"
+                  className="text-5xl text-center break-words"
                   style={{ fontFamily: `'${fontName}', sans-serif` }}
                   title={previewText}
                 >
                   {previewText}
                 </p>
               </CardContent>
-              <div className="p-4 border-t bg-card">
-                 <p className="text-center font-semibold text-lg text-foreground truncate">{fontName}</p>
-              </div>
               <Button 
                 size="lg"
                 variant="ghost" 
@@ -125,7 +134,7 @@ export default function Home() {
                 onClick={() => toggleBookmark(fontName)}
                 aria-label={`Bookmark ${fontName}`}
               >
-                <Bookmark className={`h-7 w-7 transition-colors ${isBookmarked(fontName) ? 'fill-primary text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
+                <Bookmark className={`h-8 w-8 transition-colors ${isBookmarked(fontName) ? 'fill-primary text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
               </Button>
             </Card>
           ))}

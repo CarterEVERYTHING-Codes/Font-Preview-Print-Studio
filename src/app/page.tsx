@@ -3,14 +3,15 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Bookmark, X, Moon, Sun } from 'lucide-react';
+import { ExternalLink, Bookmark, X, Moon, Sun, Search } from 'lucide-react';
 import { fontList } from '@/lib/fonts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
 
-function FontCard({ fontName, onBookmark, isBookmarked, previewText }: { fontName: string, onBookmark: (fontName: string) => void, isBookmarked: boolean, previewText: string }) {
+function FontCard({ fontName, onBookmark, isBookmarked, previewText, thingiverseUrl }: { fontName: string, onBookmark: (fontName: string) => void, isBookmarked: boolean, previewText: string, thingiverseUrl: string }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isFontLoading, setIsFontLoading] = useState(true);
   const [isFontLoaded, setIsFontLoaded] = useState(false);
@@ -21,7 +22,6 @@ function FontCard({ fontName, onBookmark, isBookmarked, previewText }: { fontNam
     setIsFontLoading(true);
     const fontUrl = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
     
-    // Check if the stylesheet is already loaded
     if (document.querySelector(`link[href="${fontUrl}"]`)) {
         setIsFontLoaded(true);
         setIsFontLoading(false);
@@ -32,18 +32,16 @@ function FontCard({ fontName, onBookmark, isBookmarked, previewText }: { fontNam
     link.href = fontUrl;
     link.rel = 'stylesheet';
     link.onload = () => {
-      // Use document.fonts.check to be more certain the font is ready
       document.fonts.load(`1em "${fontName}"`).then(() => {
         setIsFontLoaded(true);
         setIsFontLoading(false);
       }).catch(() => {
-        // even if check fails, it might have loaded.
         setIsFontLoaded(true); 
         setIsFontLoading(false);
       });
     };
     link.onerror = () => {
-        setIsFontLoading(false); // Stop loading on error
+        setIsFontLoading(false);
     };
     document.head.appendChild(link);
   }, [fontName, isFontLoaded]);
@@ -85,15 +83,25 @@ function FontCard({ fontName, onBookmark, isBookmarked, previewText }: { fontNam
           {previewText}
         </p>
       </CardContent>
-      <Button
-        size="lg"
-        variant="ghost"
-        className="absolute top-3 right-3 h-12 w-12"
-        onClick={() => onBookmark(fontName)}
-        aria-label={`Bookmark ${fontName}`}
-      >
-        <Bookmark className={`h-8 w-8 transition-colors ${isBookmarked ? 'fill-primary text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
-      </Button>
+      <div className="absolute top-2 right-2 flex flex-col gap-2">
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-12 w-12"
+          onClick={() => onBookmark(fontName)}
+          aria-label={`Bookmark ${fontName}`}
+        >
+          <Bookmark className={`h-8 w-8 transition-colors ${isBookmarked ? 'fill-primary text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
+        </Button>
+      </div>
+       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)]">
+         <Button asChild size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+            <Link href={thingiverseUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-2 h-5 w-5" />
+              Customize
+            </Link>
+          </Button>
+      </div>
     </Card>
   );
 }
@@ -105,6 +113,7 @@ export default function Home() {
   const [bookmarkedFonts, setBookmarkedFonts] = useState<string[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [theme, setTheme] = useState('light');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     setIsClient(true);
@@ -147,10 +156,14 @@ export default function Home() {
 
   const isBookmarked = (fontName: string) => bookmarkedFonts.includes(fontName);
 
+  const filteredFonts = fontList.filter(([fontName]) => 
+    fontName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="container flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
               <img 
@@ -162,8 +175,8 @@ export default function Home() {
               />
             </Link>
           </div>
-          <div className="flex items-center gap-4">
-             <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
               <Sun className="h-6 w-6 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-6 w-6 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             </Button>
@@ -214,27 +227,40 @@ export default function Home() {
                 </ScrollArea>
               </SheetContent>
             </Sheet>
-            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
-              <Link href={thingiverseUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-5 w-5" />
-                Customizer
-              </Link>
-            </Button>
           </div>
         </div>
       </header>
       <main className="flex-1 container py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input 
+              type="text"
+              placeholder="Search for a font..."
+              className="w-full pl-10 pr-4 py-2 text-lg"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-          {fontList.map(([fontName, _]) => (
+          {filteredFonts.map(([fontName, _]) => (
             <FontCard 
               key={fontName}
               fontName={fontName}
               onBookmark={toggleBookmark}
               isBookmarked={isBookmarked(fontName)}
               previewText={previewText}
+              thingiverseUrl={thingiverseUrl}
             />
           ))}
         </div>
+        {filteredFonts.length === 0 && (
+          <div className="text-center py-20">
+            <p className="text-2xl font-semibold text-muted-foreground">No fonts found</p>
+            <p className="text-muted-foreground mt-2">Try a different search term.</p>
+          </div>
+        )}
       </main>
       <footer className="py-6 border-t mt-8">
         <div className="container text-center text-muted-foreground text-sm">
@@ -244,3 +270,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

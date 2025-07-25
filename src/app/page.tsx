@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ExternalLink, Bookmark, X } from 'lucide-react';
@@ -15,13 +15,23 @@ export default function Home() {
   const previewText = "Print Studio 3D";
   const thingiverseUrl = "https://www.thingiverse.com/apps/customizer/run?thing_id=739573";
   const [bookmarkedFonts, setBookmarkedFonts] = useState<string[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    const savedFonts = localStorage.getItem('bookmarkedFonts');
+    if (savedFonts) {
+      setBookmarkedFonts(JSON.parse(savedFonts));
+    }
+  }, []);
 
   const toggleBookmark = (fontName: string) => {
-    setBookmarkedFonts(prev =>
-      prev.includes(fontName)
-        ? prev.filter(f => f !== fontName)
-        : [...prev, fontName]
-    );
+    const updatedBookmarks = bookmarkedFonts.includes(fontName)
+      ? bookmarkedFonts.filter(f => f !== fontName)
+      : [...bookmarkedFonts, fontName];
+    
+    setBookmarkedFonts(updatedBookmarks);
+    localStorage.setItem('bookmarkedFonts', JSON.stringify(updatedBookmarks));
   };
 
   const isBookmarked = (fontName: string) => bookmarkedFonts.includes(fontName);
@@ -38,9 +48,9 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline">
-                  <Bookmark className="mr-2 h-4 w-4" />
-                  My List ({bookmarkedFonts.length})
+                <Button variant="outline" size="lg">
+                  <Bookmark className="mr-2 h-5 w-5" />
+                  My List ({isClient ? bookmarkedFonts.length : 0})
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-[400px] sm:w-[540px]">
@@ -49,16 +59,16 @@ export default function Home() {
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100%-4rem)]">
                   <div className="py-4">
-                  {bookmarkedFonts.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4">
+                  {isClient && bookmarkedFonts.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-6">
                       {bookmarkedFonts.map(fontName => (
-                        <Card key={fontName} className="relative overflow-hidden shadow-md flex flex-col">
+                        <Card key={fontName} className="relative overflow-hidden shadow-lg flex flex-col">
                           <CardHeader className="p-4 border-b">
-                            <CardTitle className="text-base font-medium text-foreground truncate">{fontName}</CardTitle>
+                            <CardTitle className="text-xl font-semibold text-foreground truncate">{fontName}</CardTitle>
                           </CardHeader>
-                          <CardContent className="p-4 flex-grow flex items-center justify-center min-h-[100px]">
+                          <CardContent className="p-6 flex-grow flex items-center justify-center min-h-[120px]">
                             <p 
-                              className="text-3xl text-center break-words"
+                              className="text-4xl text-center break-words"
                               style={{ fontFamily: `'${fontName}', sans-serif` }}
                               title={previewText}
                             >
@@ -66,12 +76,12 @@ export default function Home() {
                             </p>
                           </CardContent>
                            <Button 
-                              size="icon" 
+                              size="lg" 
                               variant="ghost" 
-                              className="absolute top-2 right-2 h-8 w-8"
+                              className="absolute top-2 right-2 h-10 w-10"
                               onClick={() => toggleBookmark(fontName)}
                             >
-                              <X className="h-4 w-4" />
+                              <X className="h-6 w-6" />
                             </Button>
                         </Card>
                       ))}
@@ -83,9 +93,9 @@ export default function Home() {
                 </ScrollArea>
               </SheetContent>
             </Sheet>
-            <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
+            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
               <Link href={thingiverseUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-4 w-4" />
+                <ExternalLink className="mr-2 h-5 w-5" />
                 Customizer
               </Link>
             </Button>
@@ -93,28 +103,29 @@ export default function Home() {
         </div>
       </header>
       <main className="flex-1 container py-8 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
           {fontList.map(([fontName, _]) => (
-            <Card key={fontName} className="relative overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col">
-              <CardHeader className="p-4 border-b">
-                <CardTitle className="text-base font-medium text-foreground truncate">{fontName}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 flex-grow flex items-center justify-center min-h-[100px]">
+            <Card key={fontName} className="relative overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col group">
+              <CardContent className="p-6 flex-grow flex items-center justify-center min-h-[150px]">
                 <p 
-                  className="text-3xl text-center break-words"
+                  className="text-4xl text-center break-words"
                   style={{ fontFamily: `'${fontName}', sans-serif` }}
                   title={previewText}
                 >
                   {previewText}
                 </p>
               </CardContent>
+              <div className="p-4 border-t bg-card">
+                 <p className="text-center font-semibold text-lg text-foreground truncate">{fontName}</p>
+              </div>
               <Button 
-                size="icon" 
+                size="lg"
                 variant="ghost" 
-                className="absolute top-2 right-2 h-8 w-8"
+                className="absolute top-3 right-3 h-12 w-12"
                 onClick={() => toggleBookmark(fontName)}
+                aria-label={`Bookmark ${fontName}`}
               >
-                <Bookmark className={`h-5 w-5 ${isBookmarked(fontName) ? 'fill-current text-primary' : 'text-muted-foreground'}`} />
+                <Bookmark className={`h-7 w-7 transition-colors ${isBookmarked(fontName) ? 'fill-primary text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
               </Button>
             </Card>
           ))}

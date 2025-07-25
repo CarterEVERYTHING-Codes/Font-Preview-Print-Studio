@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from '@/lib/utils';
 
 function FontCard({ fontName, onBookmark, isBookmarked, previewText, thingiverseUrl }: { fontName: string, onBookmark: (fontName: string) => void, isBookmarked: boolean, previewText: string, thingiverseUrl: string }) {
@@ -116,6 +117,7 @@ export default function Home() {
   const [theme, setTheme] = useState('light');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState('popular');
 
   useEffect(() => {
     setIsClient(true);
@@ -158,11 +160,21 @@ export default function Home() {
 
   const isBookmarked = (fontName: string) => bookmarkedFonts.includes(fontName);
 
-  const filteredFonts = fontList.filter(([fontName, _, category]) => {
-    const matchesSearch = fontName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = activeFilter ? category === activeFilter : true;
-    return matchesSearch && matchesFilter;
-  });
+  const filteredAndSortedFonts = fontList
+    .filter(([fontName, _, category]) => {
+      const matchesSearch = fontName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = activeFilter ? category === activeFilter : true;
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      if (sortOrder === 'popular') {
+        return b[1] - a[1];
+      }
+      if (sortOrder === 'alphabetical') {
+        return a[0].localeCompare(b[0]);
+      }
+      return 0;
+    });
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -246,7 +258,7 @@ export default function Home() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant={!activeFilter ? 'default' : 'outline'}
               onClick={() => setActiveFilter(null)}
@@ -262,10 +274,21 @@ export default function Home() {
                 {category}
               </Button>
             ))}
+             <div className="ml-auto">
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="popular">Sort by Popularity</SelectItem>
+                  <SelectItem value="alphabetical">Sort by A-Z</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-          {filteredFonts.map(([fontName, _]) => (
+          {filteredAndSortedFonts.map(([fontName, _]) => (
             <FontCard 
               key={fontName}
               fontName={fontName}
@@ -276,7 +299,7 @@ export default function Home() {
             />
           ))}
         </div>
-        {filteredFonts.length === 0 && (
+        {filteredAndSortedFonts.length === 0 && (
           <div className="text-center py-20">
             <p className="text-2xl font-semibold text-muted-foreground">No fonts found</p>
             <p className="text-muted-foreground mt-2">Try a different search term or filter.</p>
@@ -291,3 +314,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

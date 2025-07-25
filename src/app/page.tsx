@@ -45,12 +45,11 @@ export default function Home() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
               <Image 
-                src="https://placehold.co/150x40.png" 
+                src="/PrintStudioLogo.png" 
                 alt="Print Studio Logo" 
                 width={150} 
                 height={40} 
                 className="dark:invert"
-                data-ai-hint="logo"
               />
             </Link>
           </div>

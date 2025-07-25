@@ -4,12 +4,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { ExternalLink, Bookmark, X, Moon, Sun, Search } from 'lucide-react';
-import { fontList } from '@/lib/fonts';
+import { fontList, fontCategories } from '@/lib/fonts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 function FontCard({ fontName, onBookmark, isBookmarked, previewText, thingiverseUrl }: { fontName: string, onBookmark: (fontName: string) => void, isBookmarked: boolean, previewText: string, thingiverseUrl: string }) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -114,6 +115,7 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [theme, setTheme] = useState('light');
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -156,9 +158,11 @@ export default function Home() {
 
   const isBookmarked = (fontName: string) => bookmarkedFonts.includes(fontName);
 
-  const filteredFonts = fontList.filter(([fontName]) => 
-    fontName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredFonts = fontList.filter(([fontName, _, category]) => {
+    const matchesSearch = fontName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = activeFilter ? category === activeFilter : true;
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -231,7 +235,7 @@ export default function Home() {
         </div>
       </header>
       <main className="flex-1 container py-8 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
+        <div className="mb-8 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input 
@@ -241,6 +245,23 @@ export default function Home() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={!activeFilter ? 'default' : 'outline'}
+              onClick={() => setActiveFilter(null)}
+            >
+              All
+            </Button>
+            {fontCategories.map(category => (
+              <Button
+                key={category}
+                variant={activeFilter === category ? 'default' : 'outline'}
+                onClick={() => setActiveFilter(category)}
+              >
+                {category}
+              </Button>
+            ))}
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
@@ -258,7 +279,7 @@ export default function Home() {
         {filteredFonts.length === 0 && (
           <div className="text-center py-20">
             <p className="text-2xl font-semibold text-muted-foreground">No fonts found</p>
-            <p className="text-muted-foreground mt-2">Try a different search term.</p>
+            <p className="text-muted-foreground mt-2">Try a different search term or filter.</p>
           </div>
         )}
       </main>
@@ -270,5 +291,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

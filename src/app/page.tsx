@@ -1,15 +1,103 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ExternalLink, Bookmark, X, Moon, Sun } from 'lucide-react';
 import { fontList } from '@/lib/fonts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+function FontCard({ fontName, onBookmark, isBookmarked, previewText }: { fontName: string, onBookmark: (fontName: string) => void, isBookmarked: boolean, previewText: string }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isFontLoading, setIsFontLoading] = useState(true);
+  const [isFontLoaded, setIsFontLoaded] = useState(false);
+
+  const loadFont = useCallback(() => {
+    if (isFontLoaded || !fontName) return;
+
+    setIsFontLoading(true);
+    const fontUrl = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
+    
+    // Check if the stylesheet is already loaded
+    if (document.querySelector(`link[href="${fontUrl}"]`)) {
+        setIsFontLoaded(true);
+        setIsFontLoading(false);
+        return;
+    }
+
+    const link = document.createElement('link');
+    link.href = fontUrl;
+    link.rel = 'stylesheet';
+    link.onload = () => {
+      // Use document.fonts.check to be more certain the font is ready
+      document.fonts.load(`1em "${fontName}"`).then(() => {
+        setIsFontLoaded(true);
+        setIsFontLoading(false);
+      }).catch(() => {
+        // even if check fails, it might have loaded.
+        setIsFontLoaded(true); 
+        setIsFontLoading(false);
+      });
+    };
+    link.onerror = () => {
+        setIsFontLoading(false); // Stop loading on error
+    };
+    document.head.appendChild(link);
+  }, [fontName, isFontLoaded]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadFont();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      if (cardRef.current) {
+        observer.unobserve(cardRef.current);
+      }
+    };
+  }, [loadFont]);
+
+  return (
+    <Card ref={cardRef} className="relative overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col group min-h-[250px]">
+      <CardHeader className="p-4 border-b">
+        <CardTitle className="text-xl font-semibold text-foreground truncate text-center">{fontName}</CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 flex-grow flex items-center justify-center min-h-[150px]">
+        {isFontLoading && !isFontLoaded && <p className="text-muted-foreground">Loading...</p>}
+        <p
+          className="text-5xl text-center break-words"
+          style={{ fontFamily: isFontLoaded ? `'${fontName}', sans-serif` : 'sans-serif' }}
+          title={previewText}
+        >
+          {previewText}
+        </p>
+      </CardContent>
+      <Button
+        size="lg"
+        variant="ghost"
+        className="absolute top-3 right-3 h-12 w-12"
+        onClick={() => onBookmark(fontName)}
+        aria-label={`Bookmark ${fontName}`}
+      >
+        <Bookmark className={`h-8 w-8 transition-colors ${isBookmarked ? 'fill-primary text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
+      </Button>
+    </Card>
+  );
+}
+
 
 export default function Home() {
   const previewText = "Print Studio 3D";
@@ -20,20 +108,28 @@ export default function Home() {
 
   useEffect(() => {
     setIsClient(true);
-    const savedFonts = localStorage.getItem('bookmarkedFonts');
-    if (savedFonts) {
-      setBookmarkedFonts(JSON.parse(savedFonts));
+    try {
+      const savedFonts = localStorage.getItem('bookmarkedFonts');
+      if (savedFonts) {
+        setBookmarkedFonts(JSON.parse(savedFonts));
+      }
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      setTheme(savedTheme);
+      document.documentElement.className = savedTheme;
+    } catch (error) {
+      console.error("Could not access localStorage:", error);
     }
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-    document.documentElement.className = savedTheme;
   }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.className = newTheme;
+    try {
+      localStorage.setItem('theme', newTheme);
+      document.documentElement.className = newTheme;
+    } catch (error) {
+      console.error("Could not access localStorage:", error);
+    }
   };
 
   const toggleBookmark = (fontName: string) => {
@@ -42,8 +138,10 @@ export default function Home() {
       : [...bookmarkedFonts, fontName];
     
     setBookmarkedFonts(updatedBookmarks);
-    if (typeof window !== 'undefined') {
+    try {
       localStorage.setItem('bookmarkedFonts', JSON.stringify(updatedBookmarks));
+    } catch (error) {
+      console.error("Could not access localStorage:", error);
     }
   };
 
@@ -128,29 +226,13 @@ export default function Home() {
       <main className="flex-1 container py-8 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
           {fontList.map(([fontName, _]) => (
-            <Card key={fontName} className="relative overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col group">
-              <CardHeader className="p-4 border-b">
-                <CardTitle className="text-xl font-semibold text-foreground truncate text-center">{fontName}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 flex-grow flex items-center justify-center min-h-[150px]">
-                <p 
-                  className="text-5xl text-center break-words"
-                  style={{ fontFamily: `'${fontName}', sans-serif` }}
-                  title={previewText}
-                >
-                  {previewText}
-                </p>
-              </CardContent>
-              <Button 
-                size="lg"
-                variant="ghost" 
-                className="absolute top-3 right-3 h-12 w-12"
-                onClick={() => toggleBookmark(fontName)}
-                aria-label={`Bookmark ${fontName}`}
-              >
-                <Bookmark className={`h-8 w-8 transition-colors ${isBookmarked(fontName) ? 'fill-primary text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
-              </Button>
-            </Card>
+            <FontCard 
+              key={fontName}
+              fontName={fontName}
+              onBookmark={toggleBookmark}
+              isBookmarked={isBookmarked(fontName)}
+              previewText={previewText}
+            />
           ))}
         </div>
       </main>

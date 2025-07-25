@@ -32,7 +32,7 @@ export default function Home() {
         <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="https://firebasestorage.googleapis.com/v0/b/project-id.appspot.com/o/PrintStudioLogo.png?alt=media&token=1234" alt="Print Studio Logo" width={150} height={40} className="dark:invert"/>
+              <Image src="/PrintStudioLogo.png" alt="Print Studio Logo" width={150} height={40} className="dark:invert"/>
             </Link>
           </div>
           <div className="flex items-center gap-4">

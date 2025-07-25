@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 import { fontList } from '@/lib/fonts';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,11 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">Font Previewer</h1>
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center gap-2">
+              <Image src="/PrintStudioLogo.png" alt="Print Studio Logo" width={150} height={40} className="dark:invert"/>
+            </Link>
+          </div>
           <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
             <Link href={thingiverseUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
@@ -43,7 +48,7 @@ export default function Home() {
       </main>
       <footer className="py-6 border-t mt-8">
         <div className="container text-center text-muted-foreground text-sm">
-          <p>&copy; {new Date().getFullYear()} Font Previewer. Fonts sourced from Google Fonts.</p>
+          <p>&copy; {new Date().getFullYear()} Print Studio. Fonts sourced from Google Fonts.</p>
         </div>
       </footer>
     </div>

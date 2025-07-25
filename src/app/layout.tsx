@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { fontList } from '@/lib/fonts';
 
 export const metadata: Metadata = {
-  title: 'Font Previewer',
+  title: 'Print Studio',
   description: 'Preview a wide variety of fonts for your 3D printing projects.',
 };
 

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ExternalLink, Bookmark, X } from 'lucide-react';
+import { ExternalLink, Bookmark, X, Moon, Sun } from 'lucide-react';
 import { fontList } from '@/lib/fonts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ export default function Home() {
   const thingiverseUrl = "https://www.thingiverse.com/apps/customizer/run?thing_id=739573";
   const [bookmarkedFonts, setBookmarkedFonts] = useState<string[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [theme, setTheme] = useState('light');
 
   useEffect(() => {
     setIsClient(true);
@@ -23,7 +24,17 @@ export default function Home() {
     if (savedFonts) {
       setBookmarkedFonts(JSON.parse(savedFonts));
     }
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+    document.documentElement.className = savedTheme;
   }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.className = newTheme;
+  };
 
   const toggleBookmark = (fontName: string) => {
     const updatedBookmarks = bookmarkedFonts.includes(fontName)
@@ -54,6 +65,10 @@ export default function Home() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
+             <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+              <Sun className="h-6 w-6 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-6 w-6 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            </Button>
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="lg">

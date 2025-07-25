@@ -44,11 +44,11 @@ export default function Home() {
         <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <Image 
+              <img 
                 src="/PrintStudioLogo.png" 
                 alt="Print Studio Logo" 
-                width={150} 
-                height={40} 
+                width="150" 
+                height="40" 
                 className="dark:invert"
               />
             </Link>
